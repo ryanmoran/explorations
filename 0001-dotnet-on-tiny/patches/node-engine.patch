@@ -1,0 +1,77 @@
+From b88d46eae99da09e5878e5ce9f69707f3360068a Mon Sep 17 00:00:00 2001
+From: Ryan Moran <rmoran@vmware.com>
+Date: Thu, 17 Sep 2020 15:00:38 -0700
+Subject: [PATCH] Adds tiny stack
+
+---
+ buildpack.toml | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
+
+diff --git a/buildpack.toml b/buildpack.toml
+index 0c8d949..d51a608 100644
+--- a/buildpack.toml
++++ b/buildpack.toml
+@@ -18,7 +18,7 @@ api = "0.2"
+     sha256 = "43616969dd39d52c9d3c0a4ed5e66600133356877ab8344a916638e7f5794490"
+     source = "https://nodejs.org/dist/v10.22.0/node-v10.22.0.tar.gz"
+     source_sha256 = "8a77f883a9cba5451cef547f737e590a32c9840a4ab421a048f2fadda799ba41"
+-    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3"]
++    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3", "io.paketo.stacks.tiny"]
+     uri = "https://buildpacks.cloudfoundry.org/dependencies/node/node_10.22.0_linux_x64_cflinuxfs3_43616969.tgz"
+     version = "10.22.0"
+ 
+@@ -29,7 +29,7 @@ api = "0.2"
+     sha256 = "d84ec1b77780923f2d0d30f9155dfcba411c67ae53548684a140b2ec982fdeba"
+     source = "https://nodejs.org/dist/v10.22.1/node-v10.22.1.tar.gz"
+     source_sha256 = "d0b49dd96ac70e99240458863efe09ae5bb1138c0ff582295f882c1482708172"
+-    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3"]
++    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3", "io.paketo.stacks.tiny"]
+     uri = "https://buildpacks.cloudfoundry.org/dependencies/node/node_10.22.1_linux_x64_cflinuxfs3_d84ec1b7.tgz"
+     version = "10.22.1"
+ 
+@@ -40,7 +40,7 @@ api = "0.2"
+     sha256 = "760e26561e981223ff92b666bbab6bf66b2ae652b42bd2bb5dc6c8163b5e28fe"
+     source = "https://nodejs.org/dist/v12.18.3/node-v12.18.3.tar.gz"
+     source_sha256 = "6ea85f80e01b007cc9b566b8836513bc5102667d833bad4c1092be60fa60c2d4"
+-    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3"]
++    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3", "io.paketo.stacks.tiny"]
+     uri = "https://buildpacks.cloudfoundry.org/dependencies/node/node_12.18.3_linux_x64_cflinuxfs3_760e2656.tgz"
+     version = "12.18.3"
+ 
+@@ -51,7 +51,7 @@ api = "0.2"
+     sha256 = "2c0046f5d0bdccf7738ba6b5e3f1084a866ff4a92c5a3f3e820b3fd8e2101fbc"
+     source = "https://nodejs.org/dist/v12.18.4/node-v12.18.4.tar.gz"
+     source_sha256 = "a802d87e579e46fc52771ed6f2667048320caca867be3276f4c4f1bbb41389c3"
+-    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3"]
++    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3", "io.paketo.stacks.tiny"]
+     uri = "https://buildpacks.cloudfoundry.org/dependencies/node/node_12.18.4_linux_x64_cflinuxfs3_2c0046f5.tgz"
+     version = "12.18.4"
+ 
+@@ -62,7 +62,7 @@ api = "0.2"
+     sha256 = "9b95bd4a9d3b933e10350586dabfa3ce61ebfa1e39adaec7d86c586b3c7feead"
+     source = "https://nodejs.org/dist/v14.10.1/node-v14.10.1.tar.gz"
+     source_sha256 = "5047c4962012f88258d8c1c6c133d870fd818ed5ea0f194ab3aa206510d144ae"
+-    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3"]
++    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3", "io.paketo.stacks.tiny"]
+     uri = "https://buildpacks.cloudfoundry.org/dependencies/node/node_14.10.1_linux_x64_cflinuxfs3_9b95bd4a.tgz"
+     version = "14.10.1"
+ 
+@@ -73,7 +73,7 @@ api = "0.2"
+     sha256 = "c81330009f27f95a3cf41003c290692efcb8d2b89a1028d7e9d01fb0de79c181"
+     source = "https://nodejs.org/dist/v14.11.0/node-v14.11.0.tar.gz"
+     source_sha256 = "c07669ddbd708d0dfc4ccb63a7ced7ad1fd7d1b59ced50cf05f22f0b96e45463"
+-    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3"]
++    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3", "io.paketo.stacks.tiny"]
+     uri = "https://buildpacks.cloudfoundry.org/dependencies/node/node_14.11.0_linux_x64_cflinuxfs3_c8133000.tgz"
+     version = "14.11.0"
+ 
+@@ -100,3 +100,6 @@ api = "0.2"
+ 
+ [[stacks]]
+   id = "org.cloudfoundry.stacks.cflinuxfs3"
++
++[[stacks]]
++  id = "io.paketo.stacks.tiny"
+-- 
+2.28.0
+

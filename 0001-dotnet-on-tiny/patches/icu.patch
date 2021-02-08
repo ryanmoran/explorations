@@ -1,0 +1,41 @@
+From 6c6e0bf08cbd0f78327b3102baee43ede33154b9 Mon Sep 17 00:00:00 2001
+From: Ryan Moran <rmoran@vmware.com>
+Date: Thu, 17 Sep 2020 14:59:49 -0700
+Subject: [PATCH] Adds tiny stack
+
+---
+ buildpack.toml | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/buildpack.toml b/buildpack.toml
+index 38b9b3f..c21a774 100644
+--- a/buildpack.toml
++++ b/buildpack.toml
+@@ -15,7 +15,7 @@ api = "0.2"
+     sha256 = "b31f08f61f93fd361bceeed815119cf2108d24228479abd2639ceb09a9d71b88"
+     source = "https://github.com/unicode-org/icu/releases/download/release-66-1/icu4c-66_1-Ubuntu18.04-x64.tgz"
+     source_sha256 = "20c995f4d1285b31cf6aace2d3e7fe12bd974e3cb6776f7a174e5976d6b88fec"
+-    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3"]
++    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3", "io.paketo.stacks.tiny"]
+     uri = "https://buildpacks.cloudfoundry.org/dependencies/icu/icu-66.1.0-any-stack-b31f08f6.tgz"
+     version = "66.1.0"
+ 
+@@ -24,7 +24,7 @@ api = "0.2"
+     sha256 = "00267b036b85449b730ccca3b18d528e13a207b88c8b43f6a6edca1dc21abe31"
+     source = "https://github.com/unicode-org/icu/releases/download/release-67-1/icu4c-67_1-Ubuntu18.04-x64.tgz"
+     source_sha256 = "303e71ecb746b767a0e899ef6e3733c0902d8f211d5fc660f8b0524d7e791ccb"
+-    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3"]
++    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3", "io.paketo.stacks.tiny"]
+     uri = "https://buildpacks.cloudfoundry.org/dependencies/icu/icu_67.1.0_linux_noarch_any-stack_00267b03.tgz"
+     version = "67.1.0"
+ 
+@@ -33,3 +33,6 @@ api = "0.2"
+ 
+ [[stacks]]
+   id = "org.cloudfoundry.stacks.cflinuxfs3"
++
++[[stacks]]
++  id = "io.paketo.stacks.tiny"
+-- 
+2.28.0
+

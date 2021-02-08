@@ -1,0 +1,59 @@
+From 1ee9026336263bce6794b926b51b1167032a1722 Mon Sep 17 00:00:00 2001
+From: Ryan Moran <rmoran@vmware.com>
+Date: Thu, 17 Sep 2020 10:31:31 -0700
+Subject: [PATCH] Adds tiny stack
+
+---
+ buildpack.toml | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/buildpack.toml b/buildpack.toml
+index e75aa19..1b29d43 100644
+--- a/buildpack.toml
++++ b/buildpack.toml
+@@ -15,7 +15,7 @@ api = "0.2"
+     sha256 = "849799474b03d2f722170bf2fff6dc8bb08ca4ebc10c86774559f9d1a4deb1bc"
+     source = "https://download.visualstudio.microsoft.com/download/pr/a44fb0b1-2c91-41d6-8970-321872341326/7e150d5bc0d3d96ae8c7cbd9e6b890fe/dotnet-sdk-2.1.809-linux-x64.tar.gz"
+     source_sha256 = "0c79f6133aa3394b683978774e0975122cd9d58b90c3b0b65bba48d44f5bafc0"
+-    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3"]
++    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3", "io.paketo.stacks.tiny"]
+     uri = "https://buildpacks.cloudfoundry.org/dependencies/dotnet-sdk/dotnet-sdk_2.1.809_linux_x64_any-stack_84979947.tar.xz"
+     version = "2.1.809"
+ 
+@@ -25,7 +25,7 @@ api = "0.2"
+     sha256 = "fde667012629b99f2e093caf736e2a8b50dc3206e1062a2622abb526d1ea08b6"
+     source = "https://download.visualstudio.microsoft.com/download/pr/eb1b19f5-3c42-4f7b-b36a-67fae2040506/40cc70f95b6485b0b87bcbc655b7c855/dotnet-sdk-2.1.810-linux-x64.tar.gz"
+     source_sha256 = "3856c888ed777818f6e4fb38434adbd139abd0cd4512c0579847503238987b65"
+-    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3"]
++    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3", "io.paketo.stacks.tiny"]
+     uri = "https://buildpacks.cloudfoundry.org/dependencies/dotnet-sdk/dotnet-sdk_2.1.810_linux_x64_any-stack_fde66701.tar.xz"
+     version = "2.1.810"
+ 
+@@ -34,7 +34,7 @@ api = "0.2"
+     sha256 = "94ec0b48b052227519386233aeb84521440753951bbba6713702918bf6d71012"
+     source = "https://download.visualstudio.microsoft.com/download/pr/4f9b8a64-5e09-456c-a087-527cfc8b4cd2/15e14ec06eab947432de139f172f7a98/dotnet-sdk-3.1.401-linux-x64.tar.gz"
+     source_sha256 = "292d8f5694df7560c39a16c12d5b5efa4038c0973d1adb768f90f39982da1c43"
+-    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3"]
++    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3", "io.paketo.stacks.tiny"]
+     uri = "https://buildpacks.cloudfoundry.org/dependencies/dotnet-sdk/dotnet-sdk_3.1.401_linux_x64_any-stack_94ec0b48.tar.xz"
+     version = "3.1.401"
+ 
+@@ -43,7 +43,7 @@ api = "0.2"
+     sha256 = "e0aedde79c13a4a58e0fb85dc7d12fe005675a4214bec009680d412981ece15a"
+     source = "https://download.visualstudio.microsoft.com/download/pr/f01e3d97-c1c3-4635-bc77-0c893be36820/6ec6acabc22468c6cc68b61625b14a7d/dotnet-sdk-3.1.402-linux-x64.tar.gz"
+     source_sha256 = "2b6b172f9483e499141e37a6b932a547d9476bf03f3e71a0fefb76c52e01a9ee"
+-    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3"]
++    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3", "io.paketo.stacks.tiny"]
+     uri = "https://buildpacks.cloudfoundry.org/dependencies/dotnet-sdk/dotnet-sdk_3.1.402_linux_x64_any-stack_e0aedde7.tar.xz"
+     version = "3.1.402"
+ 
+@@ -68,3 +68,6 @@ api = "0.2"
+ 
+ [[stacks]]
+   id = "org.cloudfoundry.stacks.cflinuxfs3"
++
++[[stacks]]
++  id = "io.paketo.stacks.tiny"
+-- 
+2.28.0
+

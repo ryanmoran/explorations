@@ -1,0 +1,77 @@
+From f3614b6104dfea76e7ecaa6e5d3d4e9dac895020 Mon Sep 17 00:00:00 2001
+From: Ryan Moran <rmoran@vmware.com>
+Date: Thu, 17 Sep 2020 10:36:00 -0700
+Subject: [PATCH] Adds tiny stack
+
+---
+ buildpack.toml     |  5 ++++-
+ cmd/detect/main.go |  2 +-
+ conf/conf.go       | 15 ++++++++-------
+ 3 files changed, 13 insertions(+), 9 deletions(-)
+
+diff --git a/buildpack.toml b/buildpack.toml
+index 92b8957..29c6184 100644
+--- a/buildpack.toml
++++ b/buildpack.toml
+@@ -1,4 +1,4 @@
+-api = "0.2"
++api = "0.4"
+ 
+ [buildpack]
+ id = "paketo-buildpacks/dotnet-core-conf"
+@@ -15,3 +15,6 @@ id = "org.cloudfoundry.stacks.cflinuxfs3"
+ 
+ [[stacks]]
+ id = "io.buildpacks.stacks.bionic"
++
++[[stacks]]
++id = "io.paketo.stacks.tiny"
+diff --git a/cmd/detect/main.go b/cmd/detect/main.go
+index 3f311e5..e3d180d 100644
+--- a/cmd/detect/main.go
++++ b/cmd/detect/main.go
+@@ -61,7 +61,7 @@ func runDetect(context detect.Detect) (int, error) {
+ 		return context.Fail(), nil
+ 	}
+ 
+-	if context.Stack == "io.buildpacks.stacks.bionic" {
++	if context.Stack == "io.buildpacks.stacks.bionic" || context.Stack == "io.paketo.stacks.tiny" {
+ 		plan.Requires = append(plan.Requires, buildplan.Required{
+ 			Name:     "icu",
+ 			Metadata: buildplan.Metadata{"launch": true},
+diff --git a/conf/conf.go b/conf/conf.go
+index d498d51..7621176 100644
+--- a/conf/conf.go
++++ b/conf/conf.go
+@@ -38,20 +38,21 @@ func (c Contributor) Contribute() error {
+ 		return err
+ 	}
+ 
+-	startCmdPrefix := fmt.Sprintf("dotnet %s.dll", runtimeConfig.BinaryName)
++	command := "dotnet"
++	var args []string
+ 	if hasExecutable {
+-		startCmdPrefix = fmt.Sprintf("./%s", runtimeConfig.BinaryName)
++		command = fmt.Sprintf("./%s", runtimeConfig.BinaryName)
++	} else {
++		args = append(args, fmt.Sprintf("%s.dll", runtimeConfig.BinaryName))
+ 	}
+ 
+-	args := fmt.Sprintf("%s --urls http://0.0.0.0:${PORT:-8080}", startCmdPrefix)
+-	startCmd := fmt.Sprintf("cd %s && %s", c.context.Application.Root, args)
+-
+ 	return c.context.Layers.WriteApplicationMetadata(layers.Metadata{
+ 		Processes: []layers.Process{
+ 			{
+ 				Type:    "web",
+-				Command: startCmd,
+-				Direct:  false,
++				Command: command,
++				Args:    args,
++				Direct:  true,
+ 			},
+ 		},
+ 	})
+-- 
+2.28.0
+

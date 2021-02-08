@@ -1,0 +1,11 @@
+load('ext://pack', 'pack')
+
+pack(
+  'example-go-image',
+  builder='gcr.io/paketo-buildpacks/builder:tiny'
+)
+k8s_yaml('deployment.yml')
+k8s_resource(
+  'example-go',
+  port_forwards=8080
+)

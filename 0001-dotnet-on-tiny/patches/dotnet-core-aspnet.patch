@@ -1,0 +1,59 @@
+From 9476909ad9ede0f264a300958c3ef3bef4a33c3d Mon Sep 17 00:00:00 2001
+From: Ryan Moran <rmoran@vmware.com>
+Date: Thu, 17 Sep 2020 10:33:35 -0700
+Subject: [PATCH] Adds tiny stack
+
+---
+ buildpack.toml | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/buildpack.toml b/buildpack.toml
+index 90a8df9..8111c2d 100644
+--- a/buildpack.toml
++++ b/buildpack.toml
+@@ -15,7 +15,7 @@ api = "0.2"
+     sha256 = "42caecb083385584978bc246987a4b86f88680ed8d2f950a131d3a27b1562870"
+     source = "https://download.visualstudio.microsoft.com/download/pr/1d6ae2ec-4cf8-4579-bdfb-18c723b1a560/48be79a406578690a3f062ff17d663f8/aspnetcore-runtime-2.1.21-linux-x64.tar.gz"
+     source_sha256 = "75dc48d0fe0cba6f80cfe017b9c3f57908efd87ffe3243956b59b8bfb421e369"
+-    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3"]
++    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3", "io.paketo.stacks.tiny"]
+     uri = "https://buildpacks.cloudfoundry.org/dependencies/dotnet-aspnetcore/dotnet-aspnetcore_2.1.21_linux_x64_any-stack_42caecb0.tar.xz"
+     version = "2.1.21"
+ 
+@@ -24,7 +24,7 @@ api = "0.2"
+     sha256 = "66e1b0f28c3603ae4ac1f120da0b23f40947e08eb7ed8e898549c1b2f4216a73"
+     source = "https://download.visualstudio.microsoft.com/download/pr/c1798274-4f4e-4e5b-8337-cb477add793c/2ab1c7f92fe497e07304b0b25c5f7845/aspnetcore-runtime-2.1.22-linux-x64.tar.gz"
+     source_sha256 = "053cb445608296a5c6d988980bdbfe1ee36602d1445fd67835d29eceab916ef0"
+-    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3"]
++    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3", "io.paketo.stacks.tiny"]
+     uri = "https://buildpacks.cloudfoundry.org/dependencies/dotnet-aspnetcore/dotnet-aspnetcore_2.1.22_linux_x64_any-stack_66e1b0f2.tar.xz"
+     version = "2.1.22"
+ 
+@@ -33,7 +33,7 @@ api = "0.2"
+     sha256 = "50ddfdfc8bb28984cdbac100c098bd61828f8706df72e7899d3c2b04c7628db0"
+     source = "https://download.visualstudio.microsoft.com/download/pr/e7d0601d-41b4-483f-b411-f2b42708054a/191b56b81e1830b413d0794728831eea/aspnetcore-runtime-3.1.7-linux-x64.tar.gz"
+     source_sha256 = "4f0ce619c1b1dbc8ccd799877b5d73158a07b1ebd1222d44b909bba13bdf735c"
+-    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3"]
++    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3", "io.paketo.stacks.tiny"]
+     uri = "https://buildpacks.cloudfoundry.org/dependencies/dotnet-aspnetcore/dotnet-aspnetcore_3.1.7_linux_x64_any-stack_50ddfdfc.tar.xz"
+     version = "3.1.7"
+ 
+@@ -42,7 +42,7 @@ api = "0.2"
+     sha256 = "8dcf99567d40190c69c875847f7ed9c7158ad78643a17089775ac0097965f09e"
+     source = "https://download.visualstudio.microsoft.com/download/pr/f7c8f82a-8c47-497d-875b-2ac210599ec5/e8aea0c195efed8a9aff2ba687db8c26/aspnetcore-runtime-3.1.8-linux-x64.tar.gz"
+     source_sha256 = "823f8ea555fd56ab40d56d423748036204c4540c08baa61de4462978a0c35583"
+-    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3"]
++    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3", "io.paketo.stacks.tiny"]
+     uri = "https://buildpacks.cloudfoundry.org/dependencies/dotnet-aspnetcore/dotnet-aspnetcore_3.1.8_linux_x64_any-stack_8dcf9956.tar.xz"
+     version = "3.1.8"
+ 
+@@ -51,3 +51,6 @@ api = "0.2"
+ 
+ [[stacks]]
+   id = "org.cloudfoundry.stacks.cflinuxfs3"
++
++[[stacks]]
++  id = "io.paketo.stacks.tiny"
+-- 
+2.28.0
+

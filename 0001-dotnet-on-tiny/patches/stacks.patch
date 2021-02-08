@@ -1,0 +1,26 @@
+From a294f3b4d3a08876880ef0af2bbf5675abd0a590 Mon Sep 17 00:00:00 2001
+From: Ryan Moran <rmoran@vmware.com>
+Date: Thu, 17 Sep 2020 15:16:46 -0700
+Subject: [PATCH] Adds dotnet support to tiny
+
+---
+ tiny/dockerfile/run/packagelist | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/tiny/dockerfile/run/packagelist b/tiny/dockerfile/run/packagelist
+index 55055e4..dc9e1bd 100644
+--- a/tiny/dockerfile/run/packagelist
++++ b/tiny/dockerfile/run/packagelist
+@@ -1,7 +1,9 @@
+ base-files
+ ca-certificates
+ libc6
++libgcc1
+ libssl1.1
++libstdc++6
+ netbase
+ openssl
+ tzdata
+-- 
+2.28.0
+

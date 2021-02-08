@@ -1,0 +1,37 @@
+From f619e67144d3eb02e152d837f245870090dfe937 Mon Sep 17 00:00:00 2001
+From: Ryan Moran <rmoran@vmware.com>
+Date: Thu, 17 Sep 2020 10:34:51 -0700
+Subject: [PATCH] Adds tiny stack
+
+---
+ buildpack.toml     | 3 +++
+ cmd/detect/main.go | 2 +-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/buildpack.toml b/buildpack.toml
+index 1189416..4733c64 100644
+--- a/buildpack.toml
++++ b/buildpack.toml
+@@ -15,3 +15,6 @@ id = "org.cloudfoundry.stacks.cflinuxfs3"
+ 
+ [[stacks]]
+ id = "io.buildpacks.stacks.bionic"
++
++[[stacks]]
++id = "io.paketo.stacks.tiny"
+diff --git a/cmd/detect/main.go b/cmd/detect/main.go
+index fb7a748..ee68a96 100644
+--- a/cmd/detect/main.go
++++ b/cmd/detect/main.go
+@@ -104,7 +104,7 @@ func runDetect(context detect.Detect) (int, error) {
+ 		})
+ 	}
+ 
+-	if context.Stack == "io.buildpacks.stacks.bionic" {
++	if context.Stack == "io.buildpacks.stacks.bionic" || context.Stack == "io.paketo.stacks.tiny" {
+ 		plan.Requires = append(plan.Requires, buildplan.Required{
+ 			Name:     "icu",
+ 			Metadata: buildplan.Metadata{"build": true},
+-- 
+2.28.0
+
