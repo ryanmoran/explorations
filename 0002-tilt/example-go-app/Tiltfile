@@ -1,10 +1,17 @@
-load('ext://pack', 'pack')
+# load the 'pack' module, call it `pack` for the remained of this file.
+# load('ext://pack', 'pack')
 
-pack(
-  'example-go-image',
-  builder='gcr.io/paketo-buildpacks/builder:tiny'
-)
+# run `pack build example-go-image --builder gcr.io/paketo-buildpacks/builder:tiny`
+# pack(
+#   'example-go-image',
+#   builder='gcr.io/paketo-buildpacks/builder:tiny'
+# )
+docker_build('example-go-image', '.')
+
+# register a YAML file that contains k8s resource
 k8s_yaml('deployment.yml')
+
+# deploy the k8s resource called 'example-go', port-forward the container to localhost:8080
 k8s_resource(
   'example-go',
   port_forwards=8080
