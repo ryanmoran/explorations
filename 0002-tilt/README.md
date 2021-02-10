@@ -389,4 +389,4 @@ Builds"](https://docs.tilt.dev/local_vs_remote.html#remote-builds) section:
 > * Sending only diffs of the build context, instead of re-uploading the same
 >   files over and over
 
-These are some of the pains that buildpacks (and TBS) are already trying to address.
+These are some of the pains that buildpacks (and kpack) are already trying to address.
