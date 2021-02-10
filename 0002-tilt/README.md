@@ -173,8 +173,8 @@ Tilt declares in its documentation that it is "focused on helping teams that
 develop multi-service apps". This framing seems to make a lot of sense. Its
 clear that if you have a bunch of apps communicating, Tilt can help keep that
 sane. Its also important that when changes in these apps take place, that they
-get updated quickly. It clear that the Tilt team has thought about this problem
-a bit and offers up their solution, "Live Update".
+get updated quickly. Its clear that the Tilt team has thought about this
+problem a bit and offers up their solution, "Live Update".
 
 Conceptually, a live update is a process that "patches" a running container.
 There are a few ways to do this, but maybe the easiest to understand involves a
@@ -184,15 +184,14 @@ your application binary:
 ```python
 local_resource(
   'example-go-compile',
-  'go build -o my-app ./',
+  'GOOS=linux GOARCH=amd64 go build -o my-app ./',
 )
 ```
 
-This `local_resource` is performing a process on your local develop
-workstation. It results in a binary that you can then copy up into your running
-container. You can perform the "syncing" part of the live update in a few ways,
-but one of the easiest is to modify your `Tiltfile` to use the
-[`docker_build_with_restart`
+This `local_resource` is performing a process on your local workstation. It
+results in a binary that you can then copy up into your running container. You
+can perform the "syncing" part of the live update in a few ways, but one of the
+easiest is to modify your `Tiltfile` to use the [`docker_build_with_restart`
 directive](https://github.com/tilt-dev/tilt-extensions/tree/master/restart_process).
 
 ```python
@@ -243,6 +242,7 @@ probably be pretty taxing to try to setup their apps if they were using the
 containers.
 
 ## Live Updates with `run()` directives
+
 There is another part of the "Live Update" feature that might help with this.
 Tilt provides a `run` directive that can be used to execute arbitrary code on a
 remote container. This means that we could remove the `local_resource`
@@ -267,6 +267,7 @@ container. It also reimplements a bit of the build process outside of the
 buildpacks as the `run` directive specifies the exact command to execute.
 
 ### How could buildpacks get involved?
+
 Much of the overhead caused when `pack build` rebuilds an app image may be
 avoided using the `run` directive to _re-run the build phase of the lifecycle
 inside the running container_. Suppose there is a `rebuild` binary in the
@@ -303,13 +304,13 @@ it has the following **preconditions**:
 > * Any locally cached `<layers>/<layer>` directories, and 
 > * A shell, if needed,
 
- In the final app image produced by a `pack build` many of these are no longer
- available, because
- * buildpacks may remove source code from the image during `build`
- * **where does the buildpack plan live?**
- * locally cached `<layers>/<layer>` are provided by the platform at (re)build
-   time
- * the `tiny` run image does not have a shell
+In the final app image produced by a `pack build` many of these are no longer
+available, because
+* buildpacks may remove source code from the image during `build`
+* **where does the buildpack plan live?**
+* locally cached `<layers>/<layer>` are provided by the platform at (re)build
+ time
+* the `tiny` run image does not have a shell
 
 If we want to use Tilt's `run()` API to rebuild by re-invoking buildpacks'
 `build` binaries, the image produced by the initial build must provide for
@@ -388,7 +389,7 @@ For these devs, exposing more information about the commands run during build
 could help them match the `local_resource()` in their Tiltfile to the build
 process that'll be used for prod.
 
-## Installing Tilt on your workstation
+## If you want to try out Tilt yourself, you can install it locally
 
 1. Install [Docker for Mac](https://docs.docker.com/docker-for-mac/install/)
 1. In the Docker preferences, click [Enable Kubernetes](https://docs.docker.com/docker-for-mac/#kubernetes)
