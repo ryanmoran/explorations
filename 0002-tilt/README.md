@@ -154,7 +154,7 @@ There are a few ways we can optimize this:
     This had a pretty dramatic improvement on the rebuild performance (on the
     order of 20-30%).
 
-Given all of the above changes, we we seeing rebuilds taking about half as long
+Given all of the above changes, we were seeing rebuilds taking about half as long
 was they were without any optimizations. These are all changes we could pretty
 easily pull request into the original `pack` extension.
 
