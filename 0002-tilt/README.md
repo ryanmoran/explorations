@@ -76,6 +76,53 @@ Tilt also has a nice UI that shows you all of this happening in realtime.
 
 ![Tilt UI](/0002-tilt/assets/ui.png)
 
+## Potential Buildpacks-Friendly Tilt User Personas
+
+### Devs who run "Hybrid" or "All Remote" builds
+Not everyone who uses Tilt will build all of the microservices in their project
+on their local machine, or deploy them in a local cluster. The [Local vs Remote
+Services](https://docs.tilt.dev/local_vs_remote.html) section of the docs
+highlights a few other workflows. Buildpacks could help teams with "Hybrid"
+setups, who may rely on 
+
+> Local pre-built services installed from an existing image or Helm chart
+
+by helping teams generate images for other teams to use, or provide an "it just
+works" experience to build other teams' images that might be part of a `tilt
+up`, but aren't the service that the dev team is iterating on.
+
+Buildpacks could help teams with "All Remote" setups by addressing some of the
+pain points in the ["Remote
+Builds"](https://docs.tilt.dev/local_vs_remote.html#remote-builds) section:
+
+> * Configuring the build jobs
+> * Communication between the build jobs and your cluster image registry
+> * Caching builds effectively
+> * Sending only diffs of the build context, instead of re-uploading the same files over and over
+
+These are some of the pains that buildpacks (and TBS) are already trying to address.
+
+### Too-Many-Dockerfiles Devs
+
+As discussed earlier in this doc, using the `live_update` feature of docker
+builds with Tilt often involves building components of the app on the dev's
+local, so that they can be copied into a running container via a `sync()`
+directive. This results in [Dockerfiles that do little more than copy pre-built
+binaries](https://github.com/tilt-dev/tilt-example-go/blob/master/3-recommended/deployments/Dockerfile).
+Obviously, these aren't production-ready. We wonder whether Tilt pushes devs
+toward maintaining separate dev and prod Dockerfiles, where dev Dockerfiles
+play nicely with Tilt, and prod ones follow best practices, are highly
+portable, pass compliance checks, etc.
+
+Since buildpacks' main goal is to build excellent, production-ready images,
+perhaps they can solve devs' pain of maintaining two Dockerfiles. They can
+continue to use a Dockerfiles for when they `tilt up`, but use buildpacks to
+produce their prod images.
+
+For these devs, exposing more information about the commands run during build
+could help them match the `local_resource()` in their Tiltfile to the build
+process that'll be used for prod.
+
 ## What is the inner loop like?
 
 Well, currently, when I make changes to my app, it triggers a full `pack
@@ -268,11 +315,11 @@ buildpacks as the `run` directive specifies the exact command to execute.
 
 ### How could buildpacks get involved?
 
-Much of the overhead caused when `pack build` rebuilds an app image may be
-avoided using the `run` directive to _re-run the build phase of the lifecycle
-inside the running container_. Suppose there is a `rebuild` binary in the
-running app container that properly re-executes the build phase. This binary
-can be invoked via a `run()` directive.
+Much of the overhead caused when `pack build` rebuilds an app image could be
+avoided if the `run` directive was used to _re-run the build phase of the
+lifecycle inside the running container_. Suppose there were a `rebuild` binary
+in the running app container that properly re-executes the build phase. This
+binary could be invoked via a `run()` directive.
 
  The advantages here are:
 * The build process remains abstracted from users, who don't need to specify
@@ -287,107 +334,60 @@ can be invoked via a `run()` directive.
    build
 
 There are, however, a number of complicating factors/prerequisites for this,
-some of which are outlined here. 
+some of which are outlined here.
 
 When the lifecycle invokes a [buildpack's `build`
 phase](https://github.com/buildpacks/spec/blob/main/buildpack.md#phase-3-build),
 it has the following **preconditions**:
 
 > GIVEN:
-> 
->* The final ordered group of buildpacks determined during the detection
-> phase, 
+>
+> * The final ordered group of buildpacks determined during the detection
+> phase,
 > * A directory containing application source code,
 > * The Buildpack Plan,
 > * Any `<layers>/<layer>.toml` files placed on the filesystem during
 > the analysis phase,
-> * Any locally cached `<layers>/<layer>` directories, and 
+> * Any locally cached `<layers>/<layer>` directories, and
 > * A shell, if needed,
 
 In the final app image produced by a `pack build` many of these are no longer
 available, because
 * buildpacks may remove source code from the image during `build`
-* **where does the buildpack plan live?**
+* the `group.toml` and `plan.toml` are not included in the built image
 * locally cached `<layers>/<layer>` are provided by the platform at (re)build
  time
 * the `tiny` run image does not have a shell
+* the buildpacks that executed during the build phase are not included in the
+  built image
 
 If we want to use Tilt's `run()` API to rebuild by re-invoking buildpacks'
 `build` binaries, the image produced by the initial build must provide for
 these prerequisites. The running container would need, at least:
 * the application source code in a known location
-* for all buildpacks whose `build` binaries will be re-invoked, layers marked
-  `build=true` must also have `launch=true`, so necessary build dependencies
-  are available
-* a base image that is suitable for running build processes
+* record of what buildpacks were detected (`group.toml`)
+* record of what the build plans were (`plan.toml`)
+* buildpacks would need to be exported into the app image
+* layers would need to be exported into the app image regardless of the
+  presence of the `launch` flag
+* the app image should be based on top of the build stack image
   * includes required mixins
   * (maybe) has a shell
 
-With all of the above included in the app image, some `rebuild` binary could:
+With all of the above included in the app image, a `rebuild` binary could:
+1. Stop the running process
 1. Unset launch-time environment variables
-2. Use information in `<layers>` to appropriately set up build-time environment
+1. Use information in `<layers>` to appropriately set up build-time environment
    variables
-3. Invoke buildpacks' `build` binaries with the correct arguments
-4. Unset build-time environment variables,
-5. Reset launch-time environment variables
-6. Invoke the start command for the app
-
-However, rebuilds would be slow because locally cached `<layers>/<layer>` would
-not be available to the app. Mounting cached layers at container start time
-could address this problem and achieve fast, in-place rebuilds.
+1. Invoke buildpacks' `build` binaries with the correct arguments
+1. Unset build-time environment variables,
+1. Set launch-time environment variables
+1. Invoke the start command for the app
 
 Some complicating factors/open questions:
-* image bloat
-* differences between build and run images
-* Does the lifecycle keep any record of user-provided build-time environment
-  variables?
-
-## Potential Buildpacks-Friendly Tilt User Personas
-
-### Devs who run "Hybrid" or "All Remote" builds
-Not everyone who uses Tilt will build all of the microservices in their project
-on their local machine, or deploy them in a local cluster. The [Local vs Remote
-Services](https://docs.tilt.dev/local_vs_remote.html) section of the docs
-highlights a few other workflows. Buildpacks could help teams with "Hybrid"
-setups, who may rely on 
-
-> Local pre-built services installed from an existing image or Helm chart
-
-by helping teams generate images for other teams to use, or provide an "it just
-works" experience to build other teams' images that might be part of a `tilt
-up`, but aren't the service that the dev team is iterating on.
-
-Buildpacks could help teams with "All Remote" setups by addressing some of the
-pain points in the ["Remote
-Builds"](https://docs.tilt.dev/local_vs_remote.html#remote-builds) section:
-
-> * Configuring the build jobs
-> * Communication between the build jobs and your cluster image registry
-> * Caching builds effectively
-> * Sending only diffs of the build context, instead of re-uploading the same files over and over
-
-These are some of the pains that buildpacks (and TBS) are already trying to address.
-
-### Too-Many-Dockerfiles Devs
-
-As discussed earlier in this doc, using the `live_update` feature of docker
-builds with Tilt often involves building components of the app on the dev's
-local, so that they can be copied into a running container via a `sync()`
-directive. This results in [Dockerfiles that do little more than copy pre-built
-binaries](https://github.com/tilt-dev/tilt-example-go/blob/master/3-recommended/deployments/Dockerfile).
-Obviously, these aren't production-ready. We wonder whether Tilt pushes devs
-toward maintaining separate dev and prod Dockerfiles, where dev Dockerfiles
-play nicely with Tilt, and prod ones follow best practices, are highly
-portable, pass compliance checks, etc.
-
-Since buildpacks' main goal is to build excellent, production-ready images,
-perhaps they can solve devs' pain of maintaining two Dockerfiles. They can
-continue to use a Dockerfiles for when they `tilt up`, but use buildpacks to
-produce their prod images.
-
-For these devs, exposing more information about the commands run during build
-could help them match the `local_resource()` in their Tiltfile to the build
-process that'll be used for prod.
+* These images would be much bigger than those we currently produce.
+* There are non-trivial differences between build and run images.
+* We won't have any record of user-provided build-time environment variables?
 
 ## If you want to try out Tilt yourself, you can install it locally
 
