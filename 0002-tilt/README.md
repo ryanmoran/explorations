@@ -1,24 +1,17 @@
 # Tilt with Paketo Buildpacks
 
-## Installing Tilt on your workstation
-
-1. Install [Docker for Mac](https://docs.docker.com/docker-for-mac/install/)
-1. In the Docker preferences, click [Enable Kubernetes](https://docs.docker.com/docker-for-mac/#kubernetes)
-1. Set `kubectl` context to `docker-desktop`: `kubectl config use-context docker-desktop`
-1. Install Tilt: `brew install tilt-dev/tap/tilt`
-
 ## How does Tilt work?
 
-Tilt runs as a daemon on your local machine. It reads a `Tiltfile` in the root
-directory.  The `Tiltfile` contains directives that tell the `tilt` daemon how
-to build and run your code. There's even a [`pack`
+[Tilt](https://tilt.dev/) runs as a daemon on your local machine. It reads a
+`Tiltfile` in the root directory.  The `Tiltfile` contains directives that tell
+the `tilt` daemon how to build and run your code. There's even a [`pack`
 directive](https://github.com/tilt-dev/tilt-extensions/tree/master/pack) that
 runs `pack build`.
 
 An example Go app `Tiltfile` might look like this:
 
 ```python
-# load the 'pack' module, call it `pack` for the remained of this file.
+# load the 'pack' module, call it `pack` for the remainder of this file.
 load('ext://pack', 'pack')
 
 # run `pack build example-go-image --builder gcr.io/paketo-buildpacks/builder:tiny`
@@ -27,7 +20,7 @@ pack(
   builder='gcr.io/paketo-buildpacks/builder:tiny'
 )
 
-# register a YAML file that contains k8s resource
+# register a YAML file that contains k8s resources
 k8s_yaml('deployment.yml')
 
 # deploy the k8s resource called 'example-go', port-forward the container to localhost:8080
@@ -91,7 +84,7 @@ build`, which depending upon your machine could be pretty slow (on the order of
 `docker_build` directive to build the image completes very quickly (on the
 order of a handful of seconds).
 
-### Where is `pack build` slow?
+### Why is `pack build` slow?
 
 We tried a few experiments to see if we could speed up `pack build`. We started
 by taking a look at what the `pack` directive was running under the covers.
@@ -117,10 +110,9 @@ There are a few ways we can optimize this:
    This helped mostly on the initial building of the container, not so much on
    subsequent rebuilds.
 
-1. We can specify which buildpack we want to use so that we are spending
-   wasteful time detecting. You can do this without pulling down a new
-   buildapck image by just referring to the buildpack by its ID and version
-   number:
+1. We can specify which buildpack we want to use so that we aren't wasting time
+   detecting. You can do this without pulling down a new buildpack image by
+   just referring to the buildpack by its ID and version number:
 
    ```
    pack build image-name:tilt-build-pack-caching \
@@ -156,7 +148,7 @@ There are a few ways we can optimize this:
      --builder gcr.io/paketo-buildpacks/builder:tiny \
      --buildpack paketo-buildpacks/go@0.3.2 \
      --trust-builder \
-     -- pull-policy never
+     --pull-policy never
    ```
 
     This had a pretty dramatic improvement on the rebuild performance (on the
@@ -376,6 +368,7 @@ Builds"](https://docs.tilt.dev/local_vs_remote.html#remote-builds) section:
 These are some of the pains that buildpacks (and TBS) are already trying to address.
 
 ### Too-Many-Dockerfiles Devs
+
 As discussed earlier in this doc, using the `live_update` feature of docker
 builds with Tilt often involves building components of the app on the dev's
 local, so that they can be copied into a running container via a `sync()`
@@ -394,4 +387,11 @@ produce their prod images.
 For these devs, exposing more information about the commands run during build
 could help them match the `local_resource()` in their Tiltfile to the build
 process that'll be used for prod.
+
+## Installing Tilt on your workstation
+
+1. Install [Docker for Mac](https://docs.docker.com/docker-for-mac/install/)
+1. In the Docker preferences, click [Enable Kubernetes](https://docs.docker.com/docker-for-mac/#kubernetes)
+1. Set `kubectl` context to `docker-desktop`: `kubectl config use-context docker-desktop`
+1. Install Tilt: `brew install tilt-dev/tap/tilt`
 
