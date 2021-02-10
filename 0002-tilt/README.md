@@ -76,53 +76,6 @@ Tilt also has a nice UI that shows you all of this happening in realtime.
 
 ![Tilt UI](/0002-tilt/assets/ui.png)
 
-## Potential Buildpacks-Friendly Tilt User Personas
-
-### Devs who run "Hybrid" or "All Remote" builds
-Not everyone who uses Tilt will build all of the microservices in their project
-on their local machine, or deploy them in a local cluster. The [Local vs Remote
-Services](https://docs.tilt.dev/local_vs_remote.html) section of the docs
-highlights a few other workflows. Buildpacks could help teams with "Hybrid"
-setups, who may rely on 
-
-> Local pre-built services installed from an existing image or Helm chart
-
-by helping teams generate images for other teams to use, or provide an "it just
-works" experience to build other teams' images that might be part of a `tilt
-up`, but aren't the service that the dev team is iterating on.
-
-Buildpacks could help teams with "All Remote" setups by addressing some of the
-pain points in the ["Remote
-Builds"](https://docs.tilt.dev/local_vs_remote.html#remote-builds) section:
-
-> * Configuring the build jobs
-> * Communication between the build jobs and your cluster image registry
-> * Caching builds effectively
-> * Sending only diffs of the build context, instead of re-uploading the same files over and over
-
-These are some of the pains that buildpacks (and TBS) are already trying to address.
-
-### Too-Many-Dockerfiles Devs
-
-As discussed earlier in this doc, using the `live_update` feature of docker
-builds with Tilt often involves building components of the app on the dev's
-local, so that they can be copied into a running container via a `sync()`
-directive. This results in [Dockerfiles that do little more than copy pre-built
-binaries](https://github.com/tilt-dev/tilt-example-go/blob/master/3-recommended/deployments/Dockerfile).
-Obviously, these aren't production-ready. We wonder whether Tilt pushes devs
-toward maintaining separate dev and prod Dockerfiles, where dev Dockerfiles
-play nicely with Tilt, and prod ones follow best practices, are highly
-portable, pass compliance checks, etc.
-
-Since buildpacks' main goal is to build excellent, production-ready images,
-perhaps they can solve devs' pain of maintaining two Dockerfiles. They can
-continue to use a Dockerfiles for when they `tilt up`, but use buildpacks to
-produce their prod images.
-
-For these devs, exposing more information about the commands run during build
-could help them match the `local_resource()` in their Tiltfile to the build
-process that'll be used for prod.
-
 ## What is the inner loop like?
 
 Well, currently, when I make changes to my app, it triggers a full `pack
@@ -389,10 +342,51 @@ Some complicating factors/open questions:
 * There are non-trivial differences between build and run images.
 * We won't have any record of user-provided build-time environment variables?
 
-## If you want to try out Tilt yourself, you can install it locally
+## Other Potentially Buildpacks-Friendly Tilt User Personas
 
-1. Install [Docker for Mac](https://docs.docker.com/docker-for-mac/install/)
-1. In the Docker preferences, click [Enable Kubernetes](https://docs.docker.com/docker-for-mac/#kubernetes)
-1. Set `kubectl` context to `docker-desktop`: `kubectl config use-context docker-desktop`
-1. Install Tilt: `brew install tilt-dev/tap/tilt`
+### Developers who maintain "dev" and "prod" Dockerfiles
 
+As discussed earlier in this doc, using the `live_update` feature of docker
+builds with Tilt often involves building components of the app on the dev's
+local, so that they can be copied into a running container via a `sync()`
+directive. This results in [Dockerfiles that do little more than copy pre-built
+binaries](https://github.com/tilt-dev/tilt-example-go/blob/master/3-recommended/deployments/Dockerfile).
+Obviously, these aren't production-ready. We wonder whether Tilt pushes devs
+toward maintaining separate dev and prod Dockerfiles, where dev Dockerfiles
+play nicely with Tilt, and prod ones follow best practices, are highly
+portable, pass compliance checks, etc.
+
+Since buildpacks' main goal is to build excellent, production-ready images,
+perhaps they can solve devs' pain of maintaining two Dockerfiles. They can
+continue to use a Dockerfiles for when they `tilt up`, but use buildpacks to
+produce their prod images.
+
+For these devs, exposing more information about the commands run during build
+could help them match the `local_resource()` in their Tiltfile to the build
+process that'll be used for prod.
+
+### Developers who run "Hybrid" or "All Remote" builds
+
+Not everyone who uses Tilt will build all of the microservices in their project
+on their local machine, or deploy them in a local cluster. The [Local vs Remote
+Services](https://docs.tilt.dev/local_vs_remote.html) section of the docs
+highlights a few other workflows. Buildpacks could help teams with "Hybrid"
+setups, who may rely on
+
+> Local pre-built services installed from an existing image or Helm chart
+
+by helping teams generate images for other teams to use, or provide an "it just
+works" experience to build other teams' images that might be part of a `tilt
+up`, but aren't the service that the dev team is iterating on.
+
+Buildpacks could help teams with "All Remote" setups by addressing some of the
+pain points in the ["Remote
+Builds"](https://docs.tilt.dev/local_vs_remote.html#remote-builds) section:
+
+> * Configuring the build jobs
+> * Communication between the build jobs and your cluster image registry
+> * Caching builds effectively
+> * Sending only diffs of the build context, instead of re-uploading the same
+>   files over and over
+
+These are some of the pains that buildpacks (and TBS) are already trying to address.
