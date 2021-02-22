@@ -16,10 +16,12 @@
 
 ## Running the example
 
+1. Run `minikube start`
 1. Change directory into the `example-dockerfile` subdirectory.
 1. Run `skaffold dev`
 
 ## Running the buildpacks example
 
+1. Run `minikube start` if you haven't already.
 1. Change directory into the `example-buildpacks` subdirectory.
 1. Run `skaffold dev`
