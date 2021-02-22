@@ -1,0 +1,13 @@
+apiVersion: skaffold/v2beta12
+kind: Config
+build:
+  artifacts:
+  - image: skaffold-node-paketo
+    buildpacks:
+      # Not really required if you are providing a builder
+      buildpacks:
+      - "index.docker.io/paketobuildpacks/nodejs"
+      #builder: "index.docker.io/paketobuildpacks/builder:tiny"
+      builder: "index.docker.io/paketobuildpacks/builder:base"
+      env:
+      - NODE_ENV=development
