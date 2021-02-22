@@ -1,0 +1,20 @@
+## Installing Skaffold
+
+1. Download and install the `skaffold` CLI:
+   ```
+   brew install skaffold
+   ```
+1. Download and install `minikube`:
+   ```
+   brew install minikube
+   ```
+
+## Running the example
+
+1. Change directory into the `example-dockerfile` subdirectory.
+1. Run `skaffold dev`
+
+## Running the buildpacks example
+
+1. Change directory into the `example-buildpacks` subdirectory.
+1. Run `skaffold dev`
