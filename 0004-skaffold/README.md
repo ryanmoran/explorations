@@ -1,3 +1,8 @@
+## Links
+[Skaffold](https://skaffold.dev/)
+[Quick Start](https://skaffold.dev/docs/quickstart/)
+[GitHub Repo](https://github.com/GoogleContainerTools/skaffold)
+
 ## Installing Skaffold
 
 1. Download and install the `skaffold` CLI:
