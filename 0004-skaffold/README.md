@@ -13,6 +13,10 @@
    ```
    brew install minikube
    ```
+1. Start the `minikube` VM:
+   ```
+   minikube start
+   ```
 
 ## Running the example
 
@@ -22,6 +26,9 @@
 
 ## Running the buildpacks example
 
-1. Run `minikube start` if you haven't already.
 1. Change directory into the `example-buildpacks` subdirectory.
+1. Run `skaffold dev`
+
+## Running the Paketo buildpacks example
+1. Change directory into the `example-paketo-buildpacks` subdirectory.
 1. Run `skaffold dev`

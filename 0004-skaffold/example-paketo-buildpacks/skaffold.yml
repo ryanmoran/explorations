@@ -7,7 +7,6 @@ build:
       # Not really required if you are providing a builder
       buildpacks:
       - "index.docker.io/paketobuildpacks/nodejs"
-      #builder: "index.docker.io/paketobuildpacks/builder:tiny"
       builder: "index.docker.io/paketobuildpacks/builder:base"
       env:
       - NODE_ENV=development
