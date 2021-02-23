@@ -164,6 +164,18 @@ See [gcp yarn buildpack](https://github.com/GoogleCloudPlatform/buildpacks/blob/
 * What about deletions? Are they synced?
 * File Sync requires tar. Does tiny have tar?
 
+## Remote Debugging
+
+Skaffold has support for remote debugging the containers that it deploys. You
+can run a `skaffold debug` command on any Skaffold pipeline and that pipeline
+will run in "debug mode". As it exists today, Skaffold does all of the work to
+enable this. When `skaffold debug` is run, the buildpacks execute as normal and
+produce an image. Skaffold then modifies the Pod start command such that it
+invokes the right kind of debug tooling. For example, Skaffold will modify a Go
+image by rewriting the Pod start command to execute `dlv` and bind it to a
+port. Additionally, it includes the `dlv` command via a volume mount that it
+includes in the Pod spec.
+
 ## Links of Interest
 [Quick Start](https://skaffold.dev/docs/quickstart/)
 [GitHub Repo](https://github.com/GoogleContainerTools/skaffold)
