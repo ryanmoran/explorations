@@ -158,7 +158,8 @@ See [an example](https://github.com/GoogleCloudPlatform/buildpacks/blob/10ca4b2e
 
 * What about deletions? Are they synced?
 * File Sync requires tar. Does tiny have tar?
-* Why do their nodejs sync list have *.json? Doesn't package.json changes have to be rebuilt?
+* ~~Why do their nodejs sync list have *.json? Doesn't package.json changes have to be rebuilt?~~
+ See rule above - sync rules don't include top level *.json
 
 ## Links of Interest
 [Quick Start](https://skaffold.dev/docs/quickstart/)
