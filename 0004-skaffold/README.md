@@ -157,7 +157,7 @@ Paketo buildpacks have to do the following functions:
 
 See [gcp yarn buildpack](https://github.com/GoogleCloudPlatform/buildpacks/blob/10ca4b2e7d2606480238f63df45633bd0d282197/cmd/nodejs/yarn/main.go#L98)
 
-* There's an opportunity to build <lang-family>-skaffold-filesync buildpack that does the above functions.
+* There's an opportunity to build `<lang-family>-skaffold-filesync` buildpack that does the above functions.
 
 #### Open questions
 
