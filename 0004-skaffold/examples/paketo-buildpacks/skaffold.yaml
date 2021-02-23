@@ -3,6 +3,14 @@ kind: Config
 build:
   artifacts:
   - image: skaffold-node-paketo
+    ## demo of manual syncing
+    # context: .
+    # sync:
+    #   manual:
+    #     - src: 'public/*.html'
+    #       dest: public
+    #     - src: 'src/*.js'
+    #       dest: src
     buildpacks:
       # Not really required if you are providing a builder
       buildpacks:

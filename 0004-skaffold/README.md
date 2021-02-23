@@ -77,14 +77,18 @@ container, instead of going through a rebuild + redeploy + restart of the
 deployed pod. This is done for files that do not need to need to be 'built'
 (e.g. static files, js files etc)
 
-There are 3 modes of File Sync: `manual`, `inferred`, `auto`. Just the auto
-mode is supported/relevant for buildpacks. Auto sync mode is enabled by default
+There are 3 modes of File Sync: `manual`, `inferred`, `auto`. Inferred mode is
+only supported with Dockerfiles. Auto sync mode is enabled by default
 for Buildpacks artifacts. To disable auto sync, set `sync.auto = false` in
-`skaffold.yaml`. As of now, File Sync works for Google buildpacks and does not
-work for Paketo buildpacks. When using paketo buildpacks, it rebuilds on every
-change.
+`skaffold.yaml`. To [use manual
+mode](https://skaffold.dev/docs/pipeline-stages/filesync/#manual-sync-mode)
+with buildpacks, users can provide sync rules in the `skaffold.yml`.
 
-Skaffold requires buildpacks to do the following for the auto sync to work.
+As of now, `auto` mode File Sync works for Google buildpacks, but does not
+work for Paketo buildpacks. When using paketo buildpacks, it rebuilds on every
+change unless manual syncing is used.
+
+Skaffold requires buildpacks to do the following for the `auto` sync to work.
 * Buildpacks must set under the Bill-of-Materials (BOM) metadata a
   `metadata.devmode.sync` key whose value lists the sync rules based on the
   language/ecosystem of the buildpack. Those sync rules will then be used by
@@ -138,11 +142,10 @@ Buildpacks can use this env var value as signal to change the way the
 application is built so that it reloads the changes or rebuilds the app on each
 change.
 
-#### How can Paketo Buildpacks support File Sync?
+#### How can Paketo Buildpacks support Auto File Sync?
 
-(This is subject to validation by experimentation)
+Paketo buildpacks have to do the following functions:
 
-Paketo buildpacks have to:
 - Check if `GOOGLE_DEVMODE` variable is set.
   - If not set:
     - Usual worflow setting start commands etc.
@@ -152,14 +155,14 @@ Paketo buildpacks have to:
     - Modify the start command to be wrapped in a filewatcher (like watchexec) so
       that start command is restarted on file change.
 
-See [an example](https://github.com/GoogleCloudPlatform/buildpacks/blob/10ca4b2e7d2606480238f63df45633bd0d282197/cmd/nodejs/yarn/main.go#L98)
+See [gcp yarn buildpack](https://github.com/GoogleCloudPlatform/buildpacks/blob/10ca4b2e7d2606480238f63df45633bd0d282197/cmd/nodejs/yarn/main.go#L98)
+
+* There's an opportunity to build <lang-family>-skaffold-filesync buildpack that does the above functions.
 
 #### Open questions
 
 * What about deletions? Are they synced?
 * File Sync requires tar. Does tiny have tar?
-* ~~Why do their nodejs sync list have *.json? Doesn't package.json changes have to be rebuilt?~~
- See rule above - sync rules don't include top level *.json
 
 ## Links of Interest
 [Quick Start](https://skaffold.dev/docs/quickstart/)
