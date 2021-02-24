@@ -206,105 +206,239 @@ rebuild and redeploy your application every time there are changes to the
 source code.
 
 In addition to the previously discussed Build and Deploy stages, `skaffold dev`
-introduces a new File Sync stage that allows for faster development loop cycles
-by allowing users to "live update" their running application container using a
-mechanism that is similar to what was [previously
-outlined](/0002-tilt/README.md#the-live-update-paradigm) in the Tilt
-Exploration.
+introduces a new [File
+Sync](https://skaffold.dev/docs/pipeline-stages/filesync/) stage that allows
+for faster development loop cycles by allowing users to "live update" their
+running application container using a mechanism that is similar to what was
+[previously outlined](/0002-tilt/README.md#the-live-update-paradigm) in the
+Tilt Exploration.
 
-### File Sync
+When you first run `skaffold dev`, Skaffold will run the Build and Deploy
+stages as normal, resulting in a running app on your Kubernetes cluster. Then,
+on subsequent changes to your source code it will sync those files to the
+running container and restart the process, skipping the Build and Deploy stages
+entirely.
 
-[File Sync](https://skaffold.dev/docs/pipeline-stages/filesync/) is one of the
-pipeline stages of the skaffold worflow. (See
-[diagram](https://skaffold.dev/docs/pipeline-stages/)). With File Sync,
-whenever a change is made to a subset of files, they are copied to the deployed
-container, instead of going through a rebuild + redeploy + restart of the
-deployed pod. This is done for files that do not need to need to be 'built'
-(e.g. static files, js files etc)
+### Using File Sync with buildpacks
 
-There are 3 modes of File Sync: `manual`, `inferred`, `auto`. Inferred mode is
-only supported with Dockerfiles. Auto sync mode is enabled by default
-for Buildpacks artifacts. To disable auto sync, set `sync.auto = false` in
-`skaffold.yaml`. To [use manual
-mode](https://skaffold.dev/docs/pipeline-stages/filesync/#manual-sync-mode)
-with buildpacks, users can provide sync rules in the `skaffold.yml`.
+The File Sync feature is supported by the [Google
+buildpacks](https://github.com/GoogleCloudPlatform/buildpacks). When Skaffold
+runs, it provides the buildpack with a `GOOGLE_DEVMODE` environment variable.
+The buildpacks modify their behavior based on the presence of this variable.
 
-As of now, `auto` mode File Sync works for Google buildpacks, but does not
-work for Paketo buildpacks. When using paketo buildpacks, it rebuilds on every
-change unless manual syncing is used.
+First, they emit a bill-of-materials that includes some metadata telling
+Skaffold what files it should watch for changes and sync into the running
+container.
 
-Skaffold requires buildpacks to do the following for the `auto` sync to work.
-* Buildpacks must set under the Bill-of-Materials (BOM) metadata a
-  `metadata.devmode.sync` key whose value lists the sync rules based on the
-  language/ecosystem of the buildpack. Those sync rules will then be used by
-  Skaffold without the user having to configure them manually.
+Second, they include some build-time dependencies (like the Go
+distribution) as launch layers to that they are available to rebuild go
+applications while running.
 
-See an example of BOM set by the google nodejs buildpack on the image:
+Finally, they overwrite the start command to run a special script. This script
+will run a process that watches the filesystem for changes. When files change,
+it will rebuild the app and then restart the app process.
 
-`docker inspect google-built-image | jq -r '.[].Config.Labels["io.buildpacks.build.metadata"]' | jq .bom`
+We can see this in operation if we run `skaffold dev` on an example that uses
+the Google buildpacks. The following example builds a Go application that logs
+"Hello world!" to `stdout` once every second.
 
-```json
-[
-  {
-    "name": "",
-    "metadata": {
-      "devmode.sync": [
-        {
-          "dest": "/workspace",
-          "src": "**/*.js"
-        },
-        {
-          "dest": "/workspace",
-          "src": "**/*.mjs"
-        },
-        {
-          "dest": "/workspace",
-          "src": "**/*.coffee"
-        },
-        {
-          "dest": "/workspace",
-          "src": "**/*.litcoffee"
-        },
-        {
-          "dest": "/workspace",
-          "src": "**/*.json"
-        },
-        {
-          "dest": "/workspace",
-          "src": "public/**"
-        }
-      ]
-    },
-    "buildpack": {
-      "id": "google.nodejs.npm",
-      "version": "0.9.0"
-    }
-  }
-]
+```
+$ skaffold dev
+Listing files to watch...
+ - example-file-sync
+Generating tags...
+ - example-file-sync -> example-file-sync:084abfe-dirty
+Checking cache...
+ - example-file-sync: Not found. Building
+Found [minikube] context, using local docker daemon.
+Building [example-file-sync]...
+v1: Pulling from buildpacks/builder
+Digest: sha256:20197a42da6a3d326e874a90c1a7178e37c5d0645ce8e9cf654c1d8984293787
+Status: Image is up to date for gcr.io/buildpacks/builder:v1
+v1: Pulling from buildpacks/gcp/run
+Digest: sha256:784f4ff2f5ffa20be59668b08e979874f335e9c81704e73c495af8b245d4e9cf
+Status: Image is up to date for gcr.io/buildpacks/gcp/run:v1
+0.9.3: Pulling from buildpacksio/lifecycle
+Digest: sha256:bc253af2edf1577717618cb3a95f0f16bb18fc9e804efbcc1b85f657d931a757
+Status: Image is up to date for buildpacksio/lifecycle:0.9.3
+===> DETECTING
+[detector] 4 of 6 buildpacks participating
+[detector] google.go.runtime  0.9.1
+[detector] google.go.gopath   0.9.0
+[detector] google.go.build    0.9.0
+[detector] google.utils.label 0.0.1
+===> ANALYZING
+[analyzer] Restoring metadata for "google.go.runtime:go" from app image
+[analyzer] Restoring metadata for "google.go.build:bin" from app image
+[analyzer] Restoring metadata for "google.go.build:devmode_scripts" from app image
+[analyzer] Restoring metadata for "google.go.build:watchexec" from app image
+===> RESTORING
+[restorer] Restoring data for "google.go.runtime:go" from cache
+[restorer] Restoring data for "google.go.build:watchexec" from cache
+===> BUILDING
+[builder] === Go - Runtime (google.go.runtime@0.9.1) ===
+[builder] --------------------------------------------------------------------------------
+[builder] Running "curl --fail --show-error --silent --location https://golang.org/dl/?mode=json"
+[builder] Done "curl --fail --show-error --silent --location https://golang...." (216.214195ms)
+[builder] Using latest runtime version: 1.15.8
+[builder] === Go - Gopath (google.go.gopath@0.9.0) ===
+[builder] --------------------------------------------------------------------------------
+[builder] Running "go get -d (GOPATH=/layers/google.go.gopath/gopath GO111MODULE=off)"
+[builder] Done "go get -d (GOPATH=/layers/google.go.gopath/gopath GO111MODUL..." (242.114919ms)
+[builder] === Go - Build (google.go.build@0.9.0) ===
+[builder] --------------------------------------------------------------------------------
+[builder] Running "go list -f {{if eq .Name \"main\"}}{{.Dir}}{{end}} ./..."
+[builder] /workspace
+[builder] Done "go list -f {{if eq .Name \"main\"}}{{.Dir}}{{end}} ./..." (116.977577ms)
+[builder] --------------------------------------------------------------------------------
+[builder] Running "go build -o /layers/google.go.build/bin/main ./. (GOCACHE=/layers/google.go.build/gocache)"
+[builder] Done "go build -o /layers/google.go.build/bin/main ./. (GOCACHE=/l..." (512.913556ms)
+[builder] === Utils - Label Image (google.utils.label@0.0.1) ===
+===> EXPORTING
+[exporter] Reusing layer 'google.go.runtime:go'
+[exporter] Reusing layer 'google.go.build:bin'
+[exporter] Reusing layer 'google.go.build:devmode_scripts'
+[exporter] Adding layer 'google.go.build:gocache'
+[exporter] Reusing layer 'google.go.build:watchexec'
+[exporter] Adding 1/1 app layer(s)
+[exporter] Reusing layer 'launcher'
+[exporter] Reusing layer 'config'
+[exporter] Reusing layer 'process-types'
+[exporter] Adding label 'io.buildpacks.lifecycle.metadata'
+[exporter] Adding label 'io.buildpacks.build.metadata'
+[exporter] Adding label 'io.buildpacks.project.metadata'
+[exporter] Setting default process type 'web'
+[exporter] *** Images (5110be3ac725):
+[exporter]       example-file-sync:latest
+[exporter] Reusing cache layer 'google.go.runtime:go'
+[exporter] Reusing cache layer 'google.go.build:watchexec'
+Tags used in deployment:
+ - example-file-sync -> example-file-sync:5110be3ac7252e4565247002c2a22c39066f4a0aa4353436188db463ae9b7a29
+Starting deploy...
+ - pod/example-file-sync created
+Waiting for deployments to stabilize...
+Deployments stabilized in 112.538089ms
+Press Ctrl+C to exit
+Watching for changes...
+[example-file-sync] Hello world!
+[example-file-sync] Hello world!
+[example-file-sync] Hello world!
 ```
 
-Skaffold injects `GOOGLE_DEVMODE=1` environment variable (as if it's in a
-`project.toml`) and sets `sync.auto = false` when running `skaffold dev`.  The
-Buildpacks can use this env var value as signal to change the way the
-application is built so that it reloads the changes or rebuilds the app on each
+Then, when we modify the `main.go` to print "Hello moon!", it syncs that file
+and runs the build and restart process from inside of the running container:
+
+```
+[example-file-sync] Hello world!
+[example-file-sync] Hello world!
+[example-file-sync] Hello world!
+Syncing 1 files for example-file-sync:5110be3ac7252e4565247002c2a22c39066f4a0aa4353436188db463ae9b7a29
+Watching for changes...
+[example-file-sync] Hello world!
+[example-file-sync] Hello moon!
+[example-file-sync] Hello moon!
+[example-file-sync] Hello moon!
+```
+
+We can take a look at the metadata that the Google buildpacks attached to the
+image under the bill of materials by running the following:
+
+```
+$ pack inspect-image example-file-sync --bom
+{
+  "remote": null,
+  "local": [
+    {
+      "name": "",
+      "metadata": {
+        "devmode.sync": [
+          {
+            "dest": "/workspace",
+            "src": "**/*.go"
+          }
+        ]
+      },
+      "buildpacks": {
+        "id": "google.go.build",
+        "version": "0.9.0"
+      }
+    }
+  ]
+}
+```
+
+You can see that the buildpack is telling Skaffold to watch for any `*.go`
+files and to sync to the `/workspace` in the running container when they
 change.
 
-#### How can Paketo Buildpacks support Auto File Sync?
+Further inspection of that same image shows that it is using a start command
+called `watch_and_run.sh`:
 
-Paketo buildpacks have to do the following functions:
+```
+$ pack inspect-image example-file-sync
+Inspecting image: example-file-sync
 
-- Check if `GOOGLE_DEVMODE` variable is set.
-  - If not set:
-    - Usual worflow setting start commands etc.
-  - Else if set:
-    - Add sync metadata relevant to the language/ecosystem to the BOM under the
-      key `metadata.devmode.sync` (i.e. `jq -r '.[].Config.Labels["io.buildpacks.build.metadata"] | fromjson.bom[].metadata["devmode.sync"]'`)
-    - Modify the start command to be wrapped in a filewatcher (like watchexec) so
-      that start command is restarted on file change.
+REMOTE:
+(not present)
 
-See [gcp yarn buildpack](https://github.com/GoogleCloudPlatform/buildpacks/blob/10ca4b2e7d2606480238f63df45633bd0d282197/cmd/nodejs/yarn/main.go#L98)
+LOCAL:
 
-* There's an opportunity to build `<lang-family>-skaffold-filesync` buildpack that does the above functions.
+Stack: google
+
+Base Image:
+  Reference: e5f7e62bf8a96d60f65f04a9d7caafb532d69c0ea955a276a0b476b0500b75ee
+  Top Layer: sha256:64b8c91fa7e24f21fd7edb153d1f820055b4ae1cd542a1554501617bb0547df9
+
+Run Images:
+  gcr.io/buildpacks/gcp/run:v1
+
+Buildpacks:
+  ID                        VERSION
+  google.go.runtime         0.9.1
+  google.go.gopath          0.9.0
+  google.go.build           0.9.0
+  google.utils.label        0.0.1
+
+Processes:
+  TYPE                 SHELL        COMMAND        ARGS
+  web (default)                     watch_and_run.sh
+```
+
+We can take a look at that script to see what is happening there:
+
+```
+$ docker run -it --entrypoint launcher example-file-sync bash
+cnb@cb0ad6d9b096:/workspace$ find / -name watch_and_run.sh
+/layers/google.go.build/devmode_scripts/bin/watch_and_run.sh
+cnb@cb0ad6d9b096:/workspace$ cat /layers/google.go.build/devmode_scripts/bin/watch_and_run.sh
+#!/bin/sh
+watchexec -r -e go /layers/google.go.build/devmode_scripts/bin/build_and_run.sh
+```
+
+So, the start command uses a tool called
+[`watchexec`](https://github.com/watchexec/watchexec) to watch for files with
+the extension `go` and then run another script called `build_and_run.sh` when
+they change.
+
+Let's take a look at the `build_and_run.sh` script:
+
+```
+$ docker run -it --entrypoint launcher example-file-sync bash
+cnb@d03924735435:/workspace$ cat /layers/google.go.build/devmode_scripts/bin/build_and_run.sh
+#!/bin/sh
+go build -o /layers/google.go.build/bin/main ./. && /layers/google.go.build/bin/main
+```
+
+The `build_and_run.sh` script runs the `go build` process creating a binary
+called `main` and then runs the `main` executable.
+
+This entire process is similar to what we outlined as a [possible path
+forward](https://github.com/ryanmoran/explorations/tree/main/0002-tilt#how-could-buildpacks-get-involved-1)
+in the Tilt exploration. Any implementation should push for a set of features
+supported upstream by the buildpack spec such that we could leverage those
+features in a platform agnostic way. Today, simply recreating what Google has
+implemented would only allow us to integrate with Skaffold, limiting the reach
+of the feature.
 
 #### Open questions
 

@@ -3,3 +3,5 @@ kind: Config
 build:
   artifacts:
   - image: example-basic
+    buildpacks:
+      builder: index.docker.io/paketobuildpacks/builder:base
