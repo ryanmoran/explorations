@@ -440,10 +440,16 @@ features in a platform agnostic way. Today, simply recreating what Google has
 implemented would only allow us to integrate with Skaffold, limiting the reach
 of the feature.
 
-#### Open questions
+#### Stack Limitations
 
-* What about deletions? Are they synced?
-* File Sync requires tar. Does tiny have tar?
+The File Sync feature operates by `exec`-ing a `tar` command that is given a
+tarball with the contents of the files to be copied into the running container.
+This means that the existing File Sync feature can only operate on stacks that
+include the `tar` package. Currently, `tar` is not included in the Tiny run
+image. Instead of adding `tar` to the Tiny stack, it may be better to have the
+buildpack lifecycle base the image off of the build image, thus ensuring all of
+the same dependencies that were available during the build process were also
+available during this File Sync stage.
 
 ## Remote Debugging
 
