@@ -192,6 +192,11 @@ You can also run [skaffold run --tail] to get the logs
 
 You can find the code for this in [`examples/basic/paketo`](examples/basic/paketo).
 
+In Skaffold, buildpacks suffer from the same performance issues we outlined in
+the [Tilt exploration](/0002-tilt/README.md#what-is-the-inner-loop-like). These
+issues are inherent to the buildpack lifecycle and would need to be addressed
+upstream.
+
 ## File Sync
 
 [File Sync](https://skaffold.dev/docs/pipeline-stages/filesync/) is one of the
