@@ -1,0 +1,7 @@
+apiVersion: skaffold/v2beta12
+kind: Config
+build:
+  artifacts:
+  - image: example-basic
+    buildpacks:
+      builder: index.docker.io/paketobuildpacks/builder:base
