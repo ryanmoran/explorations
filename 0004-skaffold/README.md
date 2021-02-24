@@ -811,7 +811,7 @@ Events:
   Normal  Started    5m6s  kubelet            Started container web
 ```
 
-There is a lot out output above, but the key thing to notice is that the
+There is a lot of output above, but the key thing to notice is that the
 command that will be run by the container has changed to `node
 --inspect=0.0.0.0:9229 src/index.js`. We can see that in this snippet:
 
