@@ -17,4 +17,4 @@
 
 ## Running the example
 
-1. Run `skaffold dev`
+1. Run `skaffold debug`

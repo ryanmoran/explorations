@@ -6,6 +6,8 @@ spec:
   ports:
   - port: 3000
     name: http
+  - port: 9229
+    name: debug
   type: LoadBalancer
   selector:
     app: web
@@ -25,6 +27,6 @@ spec:
     spec:
       containers:
       - name: web
-        image: skaffold-node-paketo
+        image: example-debug
         ports:
           - containerPort: 3000

@@ -340,6 +340,8 @@ Watching for changes...
 [example-file-sync] Hello moon!
 ```
 
+You can find the code for this in [`examples/file-sync`](examples/file-sync).
+
 We can take a look at the metadata that the Google buildpacks attached to the
 image under the bill of materials by running the following:
 
@@ -451,12 +453,231 @@ buildpack lifecycle base the image off of the build image, thus ensuring all of
 the same dependencies that were available during the build process were also
 available during this File Sync stage.
 
-## Remote Debugging
+## `skaffold debug`
 
 Skaffold has support for remote debugging the containers that it deploys. You
 can run a `skaffold debug` command on any Skaffold pipeline and that pipeline
 will run in "debug mode". As it exists today, Skaffold does all of the work to
-enable this. When `skaffold debug` is run, the buildpacks execute as normal and
+enable this.
+
+Let's explore this via an example. We are going to run `skaffold debug` using
+the [`examples/debug`](examples/debug) codebase. This codebase uses a simple
+Node.js server to respond to requests with "Hello world!"
+
+```
+skaffold debug
+Listing files to watch...
+ - example-debug
+Generating tags...
+ - example-debug -> example-debug:0918d37-dirty
+Checking cache...
+ - example-debug: Not found. Building
+Found [minikube] context, using local docker daemon.
+Building [example-debug]...
+base: Pulling from paketobuildpacks/builder
+...
+Digest: sha256:45a889434ed64017eb18bfbf30c38db1b52566e0d341eb85d6c41fbed84b664f
+Status: Downloaded newer image for paketobuildpacks/builder:base
+base-cnb: Pulling from paketobuildpacks/run
+...
+Digest: sha256:e89f3ba15ab6ef4d43d1521c9238b5c74efcf78c1f52470bfec04bc2a025528b
+Status: Downloaded newer image for paketobuildpacks/run:base-cnb
+0.10.2: Pulling from buildpacksio/lifecycle
+Digest: sha256:c3a070ed0eaf8776b66f9f7c285469edccf5299b3283c453dd45699d58d78003
+Status: Image is up to date for buildpacksio/lifecycle:0.10.2
+===> DETECTING
+[detector] 3 of 6 buildpacks participating
+[detector] paketo-buildpacks/node-engine 0.1.9
+[detector] paketo-buildpacks/npm-install 0.2.6
+[detector] paketo-buildpacks/npm-start   0.0.4
+===> ANALYZING
+[analyzer] Previous image with name "example-debug:latest" not found
+===> RESTORING
+===> BUILDING
+[builder] Paketo Node Engine Buildpack 0.1.9
+[builder]   Resolving Node Engine version
+[builder]     Candidate version sources (in priority order):
+[builder]                 -> ""
+[builder]       <unknown> -> "*"
+[builder]
+[builder]     Selected Node Engine version (using ): 14.15.5
+[builder]
+[builder]   Executing build process
+[builder]     Installing Node Engine 14.15.5
+[builder]       Completed in 4.237s
+[builder]
+[builder]   Configuring build environment
+[builder]     NODE_ENV     -> "production"
+[builder]     NODE_HOME    -> "/layers/paketo-buildpacks_node-engine/node"
+[builder]     NODE_VERBOSE -> "false"
+[builder]
+[builder]   Configuring launch environment
+[builder]     NODE_ENV     -> "production"
+[builder]     NODE_HOME    -> "/layers/paketo-buildpacks_node-engine/node"
+[builder]     NODE_VERBOSE -> "false"
+[builder]
+[builder]     Writing profile.d/0_memory_available.sh
+[builder]       Calculates available memory based on container limits at launch time.
+[builder]       Made available in the MEMORY_AVAILABLE environment variable.
+[builder]
+[builder] Paketo NPM Install Buildpack 0.2.6
+[builder]   Resolving installation process
+[builder]     Process inputs:
+[builder]       node_modules      -> "Not found"
+[builder]       npm-cache         -> "Not found"
+[builder]       package-lock.json -> "Not found"
+[builder]
+[builder]     Selected NPM build process: 'npm install'
+[builder]
+[builder]   Executing build process
+[builder]     Running 'npm install --unsafe-perm --cache /layers/paketo-buildpacks_npm-install/npm-cache'
+[builder]       Completed in 5.708s
+[builder]
+[builder]   Configuring launch environment
+[builder]     NPM_CONFIG_LOGLEVEL -> "error"
+[builder]
+[builder]   Configuring environment shared by build and launch
+[builder]     PATH -> "$PATH:/layers/paketo-buildpacks_npm-install/modules/node_modules/.bin"
+[builder]
+[builder]
+[builder] Paketo NPM Start Buildpack 0.0.4
+[builder]   Assigning launch processes
+[builder]     web: node src/index.js
+===> EXPORTING
+[exporter] Adding layer 'paketo-buildpacks/node-engine:node'
+[exporter] Adding layer 'paketo-buildpacks/npm-install:modules'
+[exporter] Adding layer 'paketo-buildpacks/npm-install:npm-cache'
+[exporter] Adding 1/1 app layer(s)
+[exporter] Adding layer 'launcher'
+[exporter] Adding layer 'config'
+[exporter] Adding layer 'process-types'
+[exporter] Adding label 'io.buildpacks.lifecycle.metadata'
+[exporter] Adding label 'io.buildpacks.build.metadata'
+[exporter] Adding label 'io.buildpacks.project.metadata'
+[exporter] Setting default process type 'web'
+[exporter] *** Images (74a07215c933):
+[exporter]       example-debug:latest
+[exporter] Adding cache layer 'paketo-buildpacks/node-engine:node'
+[exporter] Adding cache layer 'paketo-buildpacks/npm-install:modules'
+[exporter] Adding cache layer 'paketo-buildpacks/npm-install:npm-cache'
+Tags used in deployment:
+ - example-debug -> example-debug:74a07215c933f50c8c87f4012dde5da4b4ae257c66fac15ae5564b6618061167
+Starting deploy...
+ - service/web created
+ - deployment.apps/web created
+Waiting for deployments to stabilize...
+ - deployment/web is ready.
+Deployments stabilized in 4.811 seconds
+Press Ctrl+C to exit
+Not watching for changes...
+[install-nodejs-debug-support] Installing runtime debugging support files in /dbg
+[install-nodejs-debug-support] Installation complete
+[web] Debugger listening on ws://0.0.0.0:9229/6d1e170a-35d7-477e-8738-20842e4d10d1
+[web] For help, see: https://nodejs.org/en/docs/inspector
+[web] Example app listening on port 3000!
+```
+
+We can see here that the output looks like a normal build process using the
+Paketo Node.js buildpack. We can see that our application is up and running on
+port 3000.
+
+Our example codebase included a Kubernetes manifest that declared that a
+LoadBalancer should attach 2 ports to the Deployment under a Service named
+`web`. One for http and another for our debug process.
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  ports:
+  - port: 3000
+    name: http
+  - port: 9229
+    name: debug
+  type: LoadBalancer
+  selector:
+    app: web
+```
+
+Let's find out how that LoadBalancer is bound to our host machine.
+
+```
+$ minikube service web
+|-----------|------|-------------|---------------------------|
+| NAMESPACE | NAME | TARGET PORT |            URL            |
+|-----------|------|-------------|---------------------------|
+| default   | web  | http/3000   | http://192.168.64.2:30262 |
+|           |      | debug/9229  | http://192.168.64.2:30652 |
+|-----------|------|-------------|---------------------------|
+```
+
+And when we make a request to that url, we can see our "Hello world!" response.
+
+```
+curl -vvv http://192.168.64.2:30262/hello
+*   Trying 192.168.64.2...
+* TCP_NODELAY set
+* Connected to 192.168.64.2 (192.168.64.2) port 32266 (#0)
+> GET /hello HTTP/1.1
+> Host: 192.168.64.2:32266
+> User-Agent: curl/7.64.1
+> Accept: */*
+>
+< HTTP/1.1 200 OK
+< X-Powered-By: Express
+< Content-Type: text/html; charset=utf-8
+< Content-Length: 12
+< ETag: W/"c-00hq6RNueFa8QiEjhep5cJRHWAI"
+< Date: Wed, 24 Feb 2021 18:24:47 GMT
+< Connection: keep-alive
+< Keep-Alive: timeout=5
+<
+* Connection #0 to host 192.168.64.2 left intact
+Hello world!
+* Closing connection 0
+```
+
+There was also some output that mentioned debug ports above.
+
+```
+[install-nodejs-debug-support] Installing runtime debugging support files in /dbg
+[install-nodejs-debug-support] Installation complete
+[web] Debugger listening on ws://0.0.0.0:9229/6d1e170a-35d7-477e-8738-20842e4d10d1
+[web] For help, see: https://nodejs.org/en/docs/inspector
+```
+
+Let's use the Chrome Inspector to connect to the remote debugger. First, we
+will open Chrome and navigate to `chrome://inspect`.
+
+![Chrome Inspector](assets/chrome-inspector.png)
+
+We'll click on the "Configure..." button and add `192.168.64.2:30652` as a
+target.
+
+![Configure Target](assets/configure-target.png)
+
+Once we have configured the target, we can jump into a
+[REPL](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop) that
+executes inside of the running container.
+
+![Inspect Target](assets/inspect-target.png)
+
+Let's do something simple like printing "hello" to `stdout`.
+
+![Debug REPL](assets/debug-repl.png)
+
+Going back to our application logs, we can see that "hello" was printed to
+`stdout`.
+
+```
+[web] Example app listening on port 3000!
+[web] Debugger attached.
+[web] hello
+```
+
+When `skaffold debug` is run, the buildpacks execute as normal and
 produce an image. Skaffold then modifies the Pod start command such that it
 invokes the right kind of debug tooling. For example, Skaffold will modify a Go
 image by rewriting the Pod start command to execute `dlv` and bind it to a
