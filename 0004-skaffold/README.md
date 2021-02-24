@@ -197,7 +197,22 @@ the [Tilt exploration](/0002-tilt/README.md#what-is-the-inner-loop-like). These
 issues are inherent to the buildpack lifecycle and would need to be addressed
 upstream.
 
-## File Sync
+## `skaffold dev`
+
+Beyond the simple `skaffold run` command, Skaffold supports a ["development
+loop" workflow](https://skaffold.dev/docs/workflows/dev/) that can be invoked
+using the `skaffold dev` command. When this command is invoked, Skaffold will
+rebuild and redeploy your application every time there are changes to the
+source code.
+
+In addition to the previously discussed Build and Deploy stages, `skaffold dev`
+introduces a new File Sync stage that allows for faster development loop cycles
+by allowing users to "live update" their running application container using a
+mechanism that is similar to what was [previously
+outlined](/0002-tilt/README.md#the-live-update-paradigm) in the Tilt
+Exploration.
+
+### File Sync
 
 [File Sync](https://skaffold.dev/docs/pipeline-stages/filesync/) is one of the
 pipeline stages of the skaffold worflow. (See
