@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: Pod
-metadata:
-  name: example-paketo-buildpacks-go
-spec:
-  containers:
-  - name: example-paketo-buildpacks-go
-    image: example-paketo-buildpacks-go

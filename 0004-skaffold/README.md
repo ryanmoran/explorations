@@ -455,10 +455,11 @@ available during this File Sync stage.
 
 ## `skaffold debug`
 
-Skaffold has support for remote debugging the containers that it deploys. You
-can run a `skaffold debug` command on any Skaffold pipeline and that pipeline
-will run in "debug mode". As it exists today, Skaffold does all of the work to
-enable this.
+Skaffold has [support for remote
+debugging](https://skaffold.dev/docs/workflows/debug/) the containers that it
+deploys. You can run a `skaffold debug` command on any Skaffold pipeline and
+that pipeline will run in "debug mode". As it exists today, Skaffold does all
+of the work to enable this.
 
 Let's explore this via an example. We are going to run `skaffold debug` using
 the [`examples/debug`](examples/debug) codebase. This codebase uses a simple
@@ -677,12 +678,308 @@ Going back to our application logs, we can see that "hello" was printed to
 [web] hello
 ```
 
-When `skaffold debug` is run, the buildpacks execute as normal and
-produce an image. Skaffold then modifies the Pod start command such that it
-invokes the right kind of debug tooling. For example, Skaffold will modify a Go
-image by rewriting the Pod start command to execute `dlv` and bind it to a
-port. Additionally, it includes the `dlv` command via a volume mount that it
-includes in the Pod spec.
+Now that we've confirmed that we can use `skaffold debug` with Paketo
+buildpacks, let's dive a bit deeper into what Skaffold is doing to accomplish
+this.
+
+### How does this work?
+
+Skaffold is doing a few things to our application to make this work. First, it
+is rewriting the command that gets run in the container so that it enables
+remote debugging.
+
+Let's see what our image is specifying as the start command.
+
+```
+$ pack inspect-image example-debug
+Inspecting image: example-debug
+
+REMOTE:
+(not present)
+
+LOCAL:
+
+Stack: io.buildpacks.stacks.bionic
+
+Base Image:
+  Reference: 883faa600da37641e47618dc1bbbdeaf9900114e43bef808a233109a2d0d6b7d
+  Top Layer: sha256:16b4b083253b07f16420f4df9d60fe8e08be237fc9557c343172911de5e08b5c
+
+Run Images:
+  index.docker.io/paketobuildpacks/run:base-cnb
+  gcr.io/paketo-buildpacks/run:base-cnb
+
+Buildpacks:
+  ID                                   VERSION
+  paketo-buildpacks/node-engine        0.1.9
+  paketo-buildpacks/npm-install        0.2.6
+  paketo-buildpacks/npm-start          0.0.4
+
+Processes:
+  TYPE                 SHELL        COMMAND        ARGS
+  web (default)        bash         node src/index.js
+```
+
+We can see that the buildpack has specified that the start command should be
+`node src/index.js`. But when we look at the Pod spec, we see something
+different.
+
+```
+$ kubectl describe pod web-8599f44c96-bxpnc
+Name:         web-8599f44c96-bxpnc
+Namespace:    default
+Priority:     0
+Node:         minikube/192.168.64.2
+Start Time:   Wed, 24 Feb 2021 11:19:21 -0800
+Labels:       app=web
+              app.kubernetes.io/managed-by=skaffold
+              pod-template-hash=8599f44c96
+              skaffold.dev/run-id=4f1945dd-9b46-441c-ae90-a340c65c97cb
+Annotations:  debug.cloud.google.com/config: {"web":{"artifact":"example-debug","runtime":"nodejs","workingDir":"/workspace","ports":{"devtools":9229}}}
+Status:       Running
+IP:           172.17.0.4
+IPs:
+  IP:           172.17.0.4
+Controlled By:  ReplicaSet/web-8599f44c96
+Init Containers:
+  install-nodejs-debug-support:
+    Container ID:   docker://fd5cb33bf22dad91946f2021eb443627d21546651a0e50bd0fd2b185b512b807
+    Image:          gcr.io/k8s-skaffold/skaffold-debug-support/nodejs
+    Image ID:       docker-pullable://gcr.io/k8s-skaffold/skaffold-debug-support/nodejs@sha256:33c49a754a87851bb6eecdb9b2f995c48100fe6fcd145171070a85eec89f7479
+    Port:           <none>
+    Host Port:      <none>
+    State:          Terminated
+      Reason:       Completed
+      Exit Code:    0
+      Started:      Wed, 24 Feb 2021 11:19:24 -0800
+      Finished:     Wed, 24 Feb 2021 11:19:24 -0800
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /dbg from debugging-support-files (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-l2gqs (ro)
+Containers:
+  web:
+    Container ID:  docker://3173a7599f8c7d7a0bfdab3a3724045b64a1729d545bfee89c7cba8c9b6429af
+    Image:         example-debug:c34a5f3119bac9c309a4b300fd721c0b7d09b61d54bc66ce4c25f4f3621ac0a6
+    Image ID:      docker://sha256:c34a5f3119bac9c309a4b300fd721c0b7d09b61d54bc66ce4c25f4f3621ac0a6
+    Ports:         3000/TCP, 9229/TCP
+    Host Ports:    0/TCP, 0/TCP
+    Command:
+      /cnb/lifecycle/launcher
+    Args:
+      node --inspect=0.0.0.0:9229 src/index.js
+    State:          Running
+      Started:      Wed, 24 Feb 2021 11:19:25 -0800
+    Ready:          True
+    Restart Count:  0
+    Environment:
+      PATH:  /dbg/nodejs/bin:/cnb/process:/cnb/lifecycle:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    Mounts:
+      /dbg from debugging-support-files (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-l2gqs (ro)
+Conditions:
+  Type              Status
+  Initialized       True
+  Ready             True
+  ContainersReady   True
+  PodScheduled      True
+Volumes:
+  debugging-support-files:
+    Type:       EmptyDir (a temporary directory that shares a pod's lifetime)
+    Medium:
+    SizeLimit:  <unset>
+  default-token-l2gqs:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  default-token-l2gqs
+    Optional:    false
+QoS Class:       BestEffort
+Node-Selectors:  <none>
+Tolerations:     node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                 node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  5m9s  default-scheduler  Successfully assigned default/web-8599f44c96-bxpnc to minikube
+  Normal  Pulling    5m8s  kubelet            Pulling image "gcr.io/k8s-skaffold/skaffold-debug-support/nodejs"
+  Normal  Pulled     5m8s  kubelet            Successfully pulled image "gcr.io/k8s-skaffold/skaffold-debug-support/nodejs" in 614.902485ms
+  Normal  Created    5m7s  kubelet            Created container install-nodejs-debug-support
+  Normal  Started    5m7s  kubelet            Started container install-nodejs-debug-support
+  Normal  Pulled     5m6s  kubelet            Container image "example-debug:c34a5f3119bac9c309a4b300fd721c0b7d09b61d54bc66ce4c25f4f3621ac0a6" already present on machine
+  Normal  Created    5m6s  kubelet            Created container web
+  Normal  Started    5m6s  kubelet            Started container web
+```
+
+There is a lot out output above, but the key thing to notice is that the
+command that will be run by the container has changed to `node
+--inspect=0.0.0.0:9229 src/index.js`. We can see that in this snippet:
+
+```yaml
+Containers:
+  web:
+    Command:
+      /cnb/lifecycle/launcher
+    Args:
+      node --inspect=0.0.0.0:9229 src/index.js
+```
+
+This will tell the `node` process that it should run in debug mode and bind to
+`0.0.0.0:9229` to expose a remote debugger. Skaffold is doing something very
+tricky here to make this happen. First, it reads the image metadata and
+determines that the image was created by a buildpack. This can be done by
+looking to see if the image labels include a label called
+`io.buildpacks.build.metadata`. Once it has determined that the image was
+created by a buildpack, it reads the image metadata to find the start command.
+We can see that metadata by running the following:
+
+```
+$ docker inspect example-debug | jq -r -S '.[].Config.Labels["io.buildpacks.build.metadata"]' | jq -r -S .
+{
+  "bom": [
+    {
+      "buildpack": {
+        "id": "paketo-buildpacks/node-engine",
+        "version": "0.1.9"
+      },
+      "metadata": {
+        "licenses": [],
+        "name": "Node Engine",
+        "sha256": "63a8a4d43c325856c2e4673b30dc44e8ea973a5a4f21ed616fa7ee2c31cfe7f4",
+        "stacks": [
+          "io.buildpacks.stacks.bionic",
+          "org.cloudfoundry.stacks.cflinuxfs3"
+        ],
+        "uri": "https://buildpacks.cloudfoundry.org/dependencies/node/node_14.15.5_linux_x64_cflinuxfs3_63a8a4d4.tgz",
+        "version": "14.15.5"
+      },
+      "name": "node"
+    },
+    {
+      "buildpack": {
+        "id": "paketo-buildpacks/npm-install",
+        "version": "0.2.6"
+      },
+      "metadata": {
+        "launch": true
+      },
+      "name": "node_modules"
+    }
+  ],
+  "buildpacks": [
+    {
+      "homepage": "https://github.com/paketo-buildpacks/node-engine",
+      "id": "paketo-buildpacks/node-engine",
+      "version": "0.1.9"
+    },
+    {
+      "homepage": "https://github.com/paketo-buildpacks/npm-install",
+      "id": "paketo-buildpacks/npm-install",
+      "version": "0.2.6"
+    },
+    {
+      "homepage": "https://github.com/paketo-buildpacks/npm-start",
+      "id": "paketo-buildpacks/npm-start",
+      "version": "0.0.4"
+    }
+  ],
+  "launcher": {
+    "source": {
+      "git": {
+        "commit": "960cf58",
+        "repository": "github.com/buildpacks/lifecycle"
+      }
+    },
+    "version": "0.10.2"
+  },
+  "processes": [
+    {
+      "args": null,
+      "buildpackID": "paketo-buildpacks/npm-start",
+      "command": "node src/index.js",
+      "direct": false,
+      "type": "web"
+    }
+  ]
+}
+```
+
+At the very bottom of that JSON document, we can see a section called
+`processes` that specifies that our start command is `node src/index.js`.
+Skaffold has some heuristics to determine the type of application this is. In
+the case of a Node.js app, it will look to see if the command starts with
+`node` or `npm`. Once it has been determined to be a Node.js app, Skaffold
+transforms that command into one that will enable debugging. It has detection
+heuristics and transformations that work for each of its supported languages
+(Go, Node.js, Java, Python, and .Net Core). It then takes that transformed
+command and updates our Kubernetes manifest to specify the modified command.
+
+This works seamlessly for runtimes that include their own debugging support,
+like Node.js. However, for other language runtimes that need an external
+debugger, it also performs another step. It mounts another image that contains
+these debugging tools at `/dbg` inside the container. This enables a Go
+application that might have a start command like `./my-app` to be debugged
+using a command like the following:
+
+```
+/dbg/go/bin/dlv exec --headless --listen=0.0.0.0:56268 ./my-app
+```
+
+In this case, the [`dlv` executable](https://github.com/go-delve/delve) is
+mounted into the container by Skaffold at a `/dbg` mountpoint. We can see this
+in our Pod spec here:
+
+```
+Containers:
+  web:
+    Mounts:
+      /dbg from debugging-support-files (rw)
+```
+
+The debugging-support-files images are maintained in a [separate
+repo](https://github.com/GoogleContainerTools/container-debug-support) and
+include all of the extra debugging tools that are needed for each language
+runtime.
+
+Wow, so Skaffold is doing a lot of heavy lifting to make this feature work. The
+cool part is that it "just works" for Paketo buildpacks today, but its less
+than ideal that it only works for Skaffold.
+
+### How might buildpacks better support `skaffold debug`?
+
+The work that Skaffold is doing to make debugging possible is something that
+makes sense to support more broadly using buildpacks. We can imagine a set of
+"debug buildpacks" for each language family that modify the start command and
+provide debugging tools to enable the same functionality that Skaffold is
+implementing today. The work would mostly require establishing a standardized
+API such that Skaffold would be able to indicate to the buildpacks that they
+need to include debugging support, and then an API to indicate back to Skaffold
+where the remote debugger is bound.
+
+Making these needs more concrete, we could imagine that each of these debug
+buildpacks would make their modifications to the container when they see an
+environment variable like `BP_DEBUG`. And then those buildpacks could also
+include extra buildpack labels to indicate how the remote debugger was
+configured, including what port it may be bound to.
+
+## Summary
+
+Overall, Skaffold appears to be a relatively mature "development loop" toolkit
+with some pretty good buildpacks integrations. There is a huge overlap in its
+feature-set with Tilt, and it suffers many of the same limitations as Tilt with
+regards to performance and alignment with the "buildpacks philosophy".
+
+It also seems to have spiked out some ideas on how a faster "live update"
+functionality might work with buildpacks. It is worth taking a deeper look at
+their implementation with the intent to generalize those ideas into a "Develop
+API" that could be standardized across the CNB specification.
+
+Additionally, as also outlined in the Tilt exploration, we should invest in
+enabling remote debugging support for our existing buildpacks. It is great to
+see that Skaffold has a solution that appears to work with our buildpacks
+without any need for those features to be built into the buildpacks, but we
+should ensure that we can enable remote debugging on platforms beyond Skaffold
+alone.
 
 ## Links of Interest
 [Quick Start](https://skaffold.dev/docs/quickstart/)
