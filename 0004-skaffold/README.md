@@ -195,7 +195,7 @@ You can find the code for this in [`examples/basic/paketo`](examples/basic/paket
 ## File Sync
 
 [File Sync](https://skaffold.dev/docs/pipeline-stages/filesync/) is one of the
-pipeline staages of the skaffold worflow. (See
+pipeline stages of the skaffold worflow. (See
 [diagram](https://skaffold.dev/docs/pipeline-stages/)). With File Sync,
 whenever a change is made to a subset of files, they are copied to the deployed
 container, instead of going through a rebuild + redeploy + restart of the
@@ -220,8 +220,10 @@ Skaffold requires buildpacks to do the following for the `auto` sync to work.
   Skaffold without the user having to configure them manually.
 
 See an example of BOM set by the google nodejs buildpack on the image:
+
+`docker inspect google-built-image | jq -r '.[].Config.Labels["io.buildpacks.build.metadata"]' | jq .bom`
+
 ```json
-docker inspect google-built-image | jq -r '.[].Config.Labels["io.buildpacks.build.metadata"]' | jq .bom
 [
   {
     "name": "",
